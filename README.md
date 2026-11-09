@@ -11,6 +11,8 @@
 | `dist/DeepSeek Harness.app` | 同内容的未打包 App，便于 `verify.sh` 直接检查 |
 | `/Applications/DeepSeek Harness.app` | 已安装好的同版本应用 |
 
+> 本仓库只发布**构建工具与文档**，不分发安装包；`dist/` 下的产物由 `port.sh` 在本地生成，请自行校验与保存。
+
 发版操作清单：[RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md)（准备 → 构建 → 校验 → 抽检 → 归档 → 回滚）
 发布页更新日志：[RELEASE-NOTES.md](RELEASE-NOTES.md)（安装说明、变更、产物哈希、已知限制）
 
