@@ -24,6 +24,7 @@
 ```bash
 # 使用者：下载发行包、校验大小与 sha256、清理 quarantine 并打开
 ./install.sh
+MIRRORS="https://ghproxy.net" ./install.sh   # GitHub 不可达时走镜像
 
 # 官方发新版后，一条命令产出 Intel 安装包
 ./port.sh ~/Downloads/deepseek-harness-<版本>-mac-arm64.dmg

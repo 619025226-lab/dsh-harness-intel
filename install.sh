@@ -5,6 +5,8 @@
 #   DEST=/tmp ./install.sh           # 指定下载目录
 #   CHECK_ONLY=1 DEST=. ./install.sh # 只校验已存在的文件，不下载、不打开
 #   TAG=v0.2.2-rc.1 ./install.sh     # 指定版本
+#   MIRRORS="https://ghproxy.net" ./install.sh   # 指定镜像（空格分隔，可多个）
+#   BASE_URL=http://127.0.0.1:8899 ./install.sh  # 指定下载根（调试用）
 #
 # 校验失败会以非 0 退出，不会打开安装包。
 set -euo pipefail
@@ -20,20 +22,44 @@ OPEN_AFTER="${OPEN_AFTER:-1}"
 CHECK_ONLY="${CHECK_ONLY:-0}"
 [[ "$CHECK_ONLY" = "1" ]] && OPEN_AFTER=0
 
-BOLD=$'\033[1m'; RED=$'\033[31m'; GREEN=$'\033[32m'; RESET=$'\033[0m'
-log() { printf "\n${BOLD}==> %s${RESET}\n" "$*"; }
-ok()  { printf "  ${GREEN}✓${RESET} %s\n" "$*"; }
-die() { printf "\n${RED}✗ %s${RESET}\n" "$*" >&2; exit 1; }
+GH_BASE="https://github.com/$REPO/releases/download/$TAG"
+BASE_URL="${BASE_URL:-$GH_BASE}"
+MIRRORS="${MIRRORS:-https://ghproxy.net https://gh-proxy.com}"
+
+BOLD=$'\033[1m'; RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'; RESET=$'\033[0m'
+log()  { printf "\n${BOLD}==> %s${RESET}\n" "$*"; }
+ok()   { printf "  ${GREEN}✓${RESET} %s\n" "$*"; }
+warn() { printf "  ${YELLOW}!${RESET} %s\n" "$*"; }
+die()  { printf "\n${RED}✗ %s${RESET}\n" "$*" >&2; exit 1; }
 
 mkdir -p "$DEST"
 cd "$DEST" || die "无法进入 $DEST"
 
 if [[ "$CHECK_ONLY" != "1" ]]; then
-  log "下载 $FILE"
-  curl -fL --retry 3 --connect-timeout 20 --max-time 1800 -o "$FILE" \
-    "https://github.com/$REPO/releases/download/$TAG/$FILE" \
-    || die "下载失败：https://github.com/$REPO/releases/tag/$TAG"
-  ok "$(du -h "$FILE" | cut -f1)"
+  # 依次尝试：BASE_URL → 各镜像（镜像前缀直接拼在 GitHub 原始地址前）
+  SOURCES=("$BASE_URL/$FILE")
+  for mirror in $MIRRORS; do
+    [[ "${BASE_URL:-}" == "$GH_BASE" ]] || break   # 自定义 BASE_URL 时不再套镜像
+    SOURCES+=("${mirror%/}/$GH_BASE/$FILE")
+  done
+
+  downloaded=0
+  for url in "${SOURCES[@]}"; do
+    host="$(printf '%s' "$url" | awk -F/ '{print $3}')"
+    log "下载 $FILE ← $host"
+    rm -f "$FILE.part"
+    if curl -fL --retry 2 --connect-timeout 15 --max-time 1800 \
+        --speed-limit 10240 --speed-time 60 \
+        -o "$FILE.part" "$url"; then
+      mv -f "$FILE.part" "$FILE"
+      downloaded=1
+      ok "$(du -h "$FILE" | cut -f1)"
+      break
+    fi
+    warn "$host 不可用或过慢，换下一个源"
+    rm -f "$FILE.part"
+  done
+  [[ "$downloaded" = "1" ]] || die "所有下载源都失败；可指定 MIRRORS=\"<代理前缀>\" 或手动下载附件"
 fi
 
 [[ -f "$FILE" ]] || die "找不到 $FILE（当前目录：$(pwd)）"
