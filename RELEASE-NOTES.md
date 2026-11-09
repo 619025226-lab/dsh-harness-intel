@@ -2,42 +2,56 @@
 
 基于官方 `deepseek-harness-0.2.2-rc.1-mac-arm64.dmg` 移植到 Intel Mac 的可运行版本。
 业务代码与官方逐字节一致，只替换了运行时二进制与打包形态。
-可以直接下载下方附件使用，也可以用仓库里的 `port.sh` 自行构建、自行校验。
 
-### 安装
+推荐用仓库里的 `install.sh` 一键下载、校验并打开安装包；也可以手动下载附件，或自行构建。
 
-```bash
-# 拖进 /Applications 后，若来自别的机器或网盘，先去掉隔离属性
-xattr -dr com.apple.quarantine "/Applications/DeepSeek Harness.app"
-```
-
-**换机后首次打开（macOS 15）**
-
-1. 双击 DMG，把「DeepSeek Harness」拖进「应用程序」；
-2. 双击 App。若提示"无法打开，因为 Apple 无法验证…"，打开
-   **系统设置 → 隐私与安全性**，在「安全性」区域点 **仍要打开**，输入密码确认；
-   > macOS 15 起右键「打开」已不再能绕过，必须走这一步。
-3. 若提示"已损坏，应将其移到废纸篓"，先执行上面的 `xattr -dr`，再重试第 2 步；
-4. 首次启动按提示允许 TCC 授权（文档 / 下载 / 麦克风）；
-5. 打开设置确认工作区正确，发一条消息验证。
-
-### 自行构建（可选）
+### 安装（推荐）
 
 ```bash
 git clone https://github.com/619025226-lab/dsh-harness-intel
 cd dsh-harness-intel
-./port.sh ~/Downloads/deepseek-harness-0.2.2-rc.1-mac-arm64.dmg
+./install.sh
 ```
 
-构建需要可用空间 ≥ 3 GB，脚本会自行清理旧产物与下载目录；产物在 `dist/`。
+`install.sh` 会依次：下载 DMG → 校验大小与 sha256 → 清除 quarantine → 打开安装包。
+任一校验失败都会以非 0 退出，不会打开安装包。
 
-### 校验
+把「DeepSeek Harness」拖进「应用程序」后，首次打开按下面处理：
+
+**换机后首次打开（macOS 15）**
+
+1. 双击 App。若提示"无法打开，因为 Apple 无法验证…"，打开
+   **系统设置 → 隐私与安全性**，在「安全性」区域点 **仍要打开**，输入密码确认；
+   > macOS 15 起右键「打开」已不再能绕过，必须走这一步。
+2. 若提示"已损坏，应将其移到废纸篓"，执行
+   `xattr -dr com.apple.quarantine "/Applications/DeepSeek Harness.app"`，再重试第 1 步；
+3. 首次启动按提示允许 TCC 授权（文档 / 下载 / 麦克风）；
+4. 打开设置确认工作区正确，发一条消息验证。
+
+### 手动下载与校验
+
+| 项目 | 值 |
+| --- | --- |
+| 文件名 | `deepseek-harness-0.2.2-rc.1-mac-x64.dmg` |
+| 大小 | 448,895,877 字节（428 MB） |
+| sha256 | `ca7ed0f6dfe06e78b2766aa210009e6d4153bccf7c58f7b91380c08ab7c1b329` |
+| 架构 | thin x86_64（macOS 14+） |
 
 ```bash
-./verify.sh "dist/DeepSeek Harness.app"   # 全量体检
-./triage.sh "dist/DeepSeek Harness.app"   # 8 类坑位逐条排查
-shasum -a 256 deepseek-harness-0.2.2-rc.1-mac-x64.dmg
+shasum -a 256 deepseek-harness-0.2.2-rc.1-mac-x64.dmg   # 应与上表一致
+xattr -dr com.apple.quarantine deepseek-harness-0.2.2-rc.1-mac-x64.dmg
+open deepseek-harness-0.2.2-rc.1-mac-x64.dmg
 ```
+
+### 自行构建（可选）
+
+```bash
+./port.sh ~/Downloads/deepseek-harness-0.2.2-rc.1-mac-arm64.dmg
+./verify.sh "dist/DeepSeek Harness.app"
+./triage.sh "dist/DeepSeek Harness.app"
+```
+
+构建需要可用空间 ≥ 3 GB，脚本会自行清理旧产物与下载目录。
 
 ### 本次变更
 
@@ -52,13 +66,6 @@ shasum -a 256 deepseek-harness-0.2.2-rc.1-mac-x64.dmg
 ### 附件
 
 - `deepseek-harness-0.2.2-rc.1-mac-x64.dmg` — Intel（x64）安装包，428 MB（448,895,877 字节）
-
-| 项目 | 值 |
-| --- | --- |
-| 文件名 | `deepseek-harness-0.2.2-rc.1-mac-x64.dmg` |
-| 大小 | 448,895,877 字节（428 MB） |
-| sha256 | `ca7ed0f6dfe06e78b2766aa210009e6d4153bccf7c58f7b91380c08ab7c1b329` |
-| 架构 | thin x86_64（macOS 14+） |
 
 ### 已知限制
 

@@ -22,6 +22,9 @@
 三个脚本覆盖「构建 → 体检 → 排坑」，都在本目录下执行：
 
 ```bash
+# 使用者：下载发行包、校验大小与 sha256、清理 quarantine 并打开
+./install.sh
+
 # 官方发新版后，一条命令产出 Intel 安装包
 ./port.sh ~/Downloads/deepseek-harness-<版本>-mac-arm64.dmg
 #   --out <目录>      产物目录（默认 ./dist）
