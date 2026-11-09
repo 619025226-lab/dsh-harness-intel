@@ -1,0 +1,6 @@
+dist/
+port-work/
+tools/node_modules/
+.npm-cache/
+.npm-logs/
+dmgcheck/
