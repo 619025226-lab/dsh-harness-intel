@@ -1,12 +1,29 @@
 2026-11-09
 
-基于官方 `deepseek-harness-0.2.2-rc.1-mac-arm64.dmg` 移植的 Intel Mac 可运行版本。
-业务代码与官方逐字节一致，只替换了运行时二进制与打包形态。
+基于官方 `deepseek-harness-0.2.2-rc.1-mac-arm64.dmg` 移植到 Intel Mac 的构建工具与说明。
+本仓库**不提供二进制下载**——请用 `port.sh` 从官方 DMG 自行构建，再用 `verify.sh` / `triage.sh` 校验。
 
-### 安装
+### 构建
 
 ```bash
-# 拖进 /Applications 后，若来自别的机器或网盘，先去掉隔离属性
+git clone https://github.com/619025226-lab/dsh-harness-intel
+cd dsh-harness-intel
+./port.sh ~/Downloads/deepseek-harness-0.2.2-rc.1-mac-arm64.dmg
+```
+
+产物在 `dist/`：`DeepSeek Harness.app` 与 `deepseek-harness-0.2.2-rc.1-mac-x64.dmg`。
+构建需要可用空间 ≥ 3 GB，脚本会自行清理旧产物与下载目录。
+
+### 校验
+
+```bash
+./verify.sh "dist/DeepSeek Harness.app"   # 全量体检
+./triage.sh "dist/DeepSeek Harness.app"   # 8 类坑位逐条排查
+```
+
+### 安装（自行构建后）
+
+```bash
 xattr -dr com.apple.quarantine "/Applications/DeepSeek Harness.app"
 ```
 
@@ -20,9 +37,6 @@ xattr -dr com.apple.quarantine "/Applications/DeepSeek Harness.app"
 4. 首次启动按提示允许 TCC 授权（文档 / 下载 / 麦克风）；
 5. 打开设置确认工作区正确，发一条消息验证。
 
-`xattr -l "/Applications/DeepSeek Harness.app"` 可以查看是否还带隔离属性
-（仍出现 `com.apple.quarantine` 就说明没清掉）。
-
 ### 本次变更
 
 - 运行时全部替换为 x86_64：Electron 44.7.0、Node 24.21.0、Python 3.12.14（含 numpy / pandas / lxml / Pillow 等 Office 依赖）；
@@ -33,32 +47,13 @@ xattr -dr com.apple.quarantine "/Applications/DeepSeek Harness.app"
 - 删除 `app-update.yml` 关闭自动更新（避免被官方 feed 拉回 arm64）；
 - `runtime.json` 的 `arch` 改为 `x64`。
 
-### 产物
-
-| 项目 | 值 |
-| --- | --- |
-| 文件名 | `deepseek-harness-0.2.2-rc.1-mac-x64.dmg` |
-| 大小 | 448,895,877 字节（428 MB） |
-| sha256 | `ca7ed0f6dfe06e78b2766aa210009e6d4153bccf7c58f7b91380c08ab7c1b329` |
-| 架构 | thin x86_64（macOS 14+） |
-
 ### 已知限制
 
-- **ad-hoc 签名、无公证**：本机可直接运行；换机器或经网盘下载会被 Gatekeeper 拦，按上面的步骤放行；
-- **无自动更新**：每次官方发新版需重新移植，不能直接升级（会被替换成 arm64）；
-- **仅 Intel**：Apple Silicon 上需经 Rosetta 运行，建议直接用官方原版。
+- **ad-hoc 签名、无公证**：本机可直接运行；换机器或经网盘传输会被 Gatekeeper 拦，按上面的步骤放行；
+- **无自动更新**：每次官方发新版需重新构建，不能直接升级；
+- **仅 Intel**：Apple Silicon 上需经 Rosetta 运行，建议直接用官方原版；
+- **不随仓库分发二进制**：构建产物请自行保存与校验。
 
 ---
 
-完整变更、构建流程与校验脚本见仓库中的 `README.md` 与 `RELEASE-CHECKLIST.md`。
-
-### 附件
-
-- `deepseek-harness-0.2.2-rc.1-mac-x64.dmg` — Intel（x64）安装包，428 MB（448,895,877 字节）
-
-下载后建议先校验：
-
-```bash
-shasum -a 256 deepseek-harness-0.2.2-rc.1-mac-x64.dmg
-# ca7ed0f6dfe06e78b2766aa210009e6d4153bccf7c58f7b91380c08ab7c1b329
-```
+完整变更、构建流程与校验脚本见仓库中的 `README.md`、`RELEASE-CHECKLIST.md` 与 `triage.sh`。
